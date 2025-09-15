@@ -42,30 +42,22 @@ A simple yet powerful tool to download **Bing Wallpaper App's images** in full r
 
 ---
 
-## ⚙️ Installation
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
 ## 🚀 How to Run
 
 1. Double-click the `.vbs` script.  
    - Opens a PowerShell window running the Python script.  
-   - Shows real-time status and progress.  
+   - Shows status.  
 
-2. Images will be downloaded into theme folders in the current directory.  
+2. Images will be downloaded into theme folders in the current directory or the directory path mentioned in `.download_location` file.  
 
 ---
 
 ## 🔍 How’s this Different?
 
-- ✅ Uses **title** instead of IDs for file names.  
-- ✅ Retrieves **40 images** for Bing theme via Bing image API (unlike Bing Theme app api with just 8).  
+- ✅ Uses **title & copyright** for file name instead of ID.  
+- ✅ Retrieves **40 images** for Bing theme from across regions via Bing image API (unlike Bing Theme app api with just 8).  
 - ✅ Handles **deduplication smartly** across regions.  
-- ✅ Downloads **both landscape & portrait wallpapers**.  
+- ✅ Downloads max resolutions of **both landscape & portrait wallpapers**.  
 
 ---
 
