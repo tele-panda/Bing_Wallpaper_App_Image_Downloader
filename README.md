@@ -23,9 +23,6 @@ A simple yet powerful tool to download **Bing Wallpaper App's images** in full r
   Keeps a `downloaded images.txt` log to avoid re-downloading.  
   - Delete images you don’t like — they won’t come back in the next run, get just the new images!  
 
-- ⚡ **Automation Ready**  
-  Run daily via **Task Scheduler** or **Non-Sucking Service Manager (NSSM)** to always keep your collection fresh.  
-
 - 🤖 **Optional AI Images**  
   The script can also fetch Bing’s **AI-generated wallpapers** by enabling them in the config:  
 
@@ -46,10 +43,18 @@ A simple yet powerful tool to download **Bing Wallpaper App's images** in full r
 ## 🚀 How to Run
 
 1. Double-click the `.vbs` script.  
-   - Opens a PowerShell window running the Python script.  
+   - Opens a cmd window running the Python script.  
    - Shows status.  
 
 2. Images will be downloaded into theme folders in the current directory or the directory path mentioned in `.download_location` file.  
+
+---
+
+## 🔁 Setup Auto run
+
+1. `Win+R` and run `shell:startup`.
+
+2. Create a shortcut to the `.vbs` file with the `/quiet` parameter and put it in here.
 
 ---
 
