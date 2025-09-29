@@ -32,6 +32,7 @@ A simple yet powerful tool to download **Bing Wallpaper App's images** in full r
   ```python
   BIC_FILTERS = [True, False]  # enables both filtered (AI) and unfiltered images, AI Images go into the "AI Images" Folder within the theme folder.
   ```
+  
   ⚠️ Note: AI images are disabled by default since they often look poor.
 
 ---
