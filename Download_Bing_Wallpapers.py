@@ -1,3 +1,4 @@
+import os
 import requests
 from pathlib import Path
 import re
@@ -18,22 +19,50 @@ if download_location_file.exists():
             download_location.mkdir(parents=True, exist_ok=True)
             print(f"Download path: {download_location}")
     except Exception as e:
-        print(f"Warning: Could not read .download_location file, using current directory. ({e})")
+        print(
+            f"Warning: Could not read .download_location file, using current directory. ({e})"
+        )
 
 # ---------------------------
 # Configuration
 # ---------------------------
 BING_THEME_DIR = "Bing"
-TRACK_FILE = download_location / "downloaded images.txt"  # tracking file in custom or current directory
+TRACK_FILE = (
+    download_location / "downloaded images.txt"
+)  # tracking file in custom or current directory
 
-MARKETS = ["en-US", "ja-JP", "en-AU", "en-GB", "de-DE", "en-NZ", "en-CA",
-           "en-IN", "fr-FR", "fr-CA", "it-IT", "es-ES", "pt-BR", "en-ROW"]
+MARKETS = [
+    "en-US",
+    "ja-JP",
+    "en-AU",
+    "en-GB",
+    "de-DE",
+    "en-NZ",
+    "en-CA",
+    "en-IN",
+    "fr-FR",
+    "fr-CA",
+    "it-IT",
+    "es-ES",
+    "pt-BR",
+    "en-ROW",
+]
 
 BING_WALLPAPER_URL = "https://www.bing.com/HPImageArchive.aspx"
 BING_DOMAIN = "https://www.bing.com"
 BING_THEME_WALLPAPER_URL = "https://services.bingapis.com/ge-apps/api/v2/bwc/hpimages"
 
-THEMES = ["Bing", "Abstract", "Cat", "Dog", "Flower", "Ocean", "Space", "Travel", "Wild Animal"]
+THEMES = [
+    "Bing",
+    "Abstract",
+    "Cat",
+    "Dog",
+    "Flower",
+    "Ocean",
+    "Space",
+    "Travel",
+    "Wild Animal",
+]
 
 BIC_FILTERS = [True]  # True = AI filtered, False = AI unfiltered.
 # You can add both [True, False] to get all images, AI images go into a separate folder. AI images look awful btw.
@@ -46,13 +75,15 @@ theme_skipped = 0
 # ---------------------------
 # Utility Functions
 # ---------------------------
-spinner_cycle = itertools.cycle(['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'])
+spinner_cycle = itertools.cycle(["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
 _spinner_running = False
 _loop = None
 _task = None
 
+
 def sanitize_filename(name):
     return re.sub(r'[\\/*?:"<>|]', "_", name)
+
 
 def read_tracking():
     lines = []
@@ -66,9 +97,11 @@ def read_tracking():
                     ids.add(line.split("  |  ")[1])
     return set(lines), ids
 
+
 def append_tracking(name, id_val):
     with TRACK_FILE.open("a", encoding="utf-8") as f:
         f.write(f"{name}  |  {id_val}\n")
+
 
 def download_image(url, filepath):
     r = requests.get(url, stream=True)
@@ -76,7 +109,8 @@ def download_image(url, filepath):
     with open(filepath, "wb") as f:
         for chunk in r.iter_content(1024):
             f.write(chunk)
-      
+
+
 async def _spinner_loop():
     """Internal loop for spinner animation."""
     global _spinner_running
@@ -85,6 +119,7 @@ async def _spinner_loop():
         print(f"\rSkipping {symbol} ", end="", flush=True)
         await asyncio.sleep(0.1)
     print("\r", end="", flush=True)  # clear line when stopped
+
 
 def show_spinner(state: bool):
     """Sync-friendly spinner toggle."""
@@ -101,6 +136,7 @@ def show_spinner(state: bool):
         _spinner_running = False
         if _task:
             _task = None
+
 
 # ---------------------------
 # Bing Image API
@@ -119,7 +155,9 @@ def fetch_bing_images():
                 data = resp.json()
                 for img in data.get("images", []):
                     urlbase = img["urlbase"]
-                    copyright_text = img.get("copyright", img.get("copyrighttext", "Unknown"))
+                    copyright_text = img.get(
+                        "copyright", img.get("copyrighttext", "Unknown")
+                    )
                     image_id = urlbase.split("_")[0].split("id=")[-1]
 
                     if image_id in seen_ids:
@@ -144,8 +182,11 @@ def fetch_bing_images():
                     bing_downloaded += 1
                     print(f"Downloaded: {BING_THEME_DIR} / {copyright_text}")
             except Exception as e:
-                print(f"Error fetching homepage images for market {market} idx {idx}: {e}")
+                print(
+                    f"Error fetching homepage images for market {market} idx {idx}: {e}"
+                )
     show_spinner(False)
+
 
 # ---------------------------
 # Bing Wallpaper API
@@ -167,7 +208,7 @@ def fetch_other_theme_images():
                     "mkt": "en-US",
                     "theme": theme.lower(),
                     "defaultBrowser": "ME",
-                    "IsBicFilterEnabled": str(bic)
+                    "IsBicFilterEnabled": str(bic),
                 }
                 resp = requests.get(BING_THEME_WALLPAPER_URL, params=params)
                 resp.raise_for_status()
@@ -203,6 +244,7 @@ def fetch_other_theme_images():
                 print(f"Error fetching theme {theme} bic {bic}: {e}")
     show_spinner(False)
 
+
 # ---------------------------
 # Main
 # ---------------------------
@@ -212,5 +254,8 @@ if __name__ == "__main__":
     print()
     print(f"Bing Theme images: Downloaded {bing_downloaded}, Skipped {bing_skipped}")
     print(f"Other Theme images: Downloaded {theme_downloaded}, Skipped {theme_skipped}")
-    print("All done. Press Enter to close.")
-    input()
+    print("All done.", end="")
+    interactive = os.environ.get("BING_INTERACTIVE") != "0"
+    if interactive:
+        print(" Press Enter to close.")
+        input()

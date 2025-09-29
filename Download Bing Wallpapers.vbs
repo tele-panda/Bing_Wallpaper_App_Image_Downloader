@@ -1,26 +1,54 @@
 Set objShell = CreateObject("Wscript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
+Set args = WScript.Arguments
+Set env = objShell.Environment("PROCESS")
 
-' Full path to Python file
-pyFile = "Download_Bing_Wallpapers.py"
+pyFile = ".\Download_Bing_Wallpapers.py"
 
-' Get the folder where the Python file resides (project directory)
-projectDir = fso.GetParentFolderName(pyFile)
-
-' Default command: pip + requirements.txt
-cmd = "pip install -r requirements.txt & python " & pyFile
-
-' Check if uv exists
-On Error Resume Next
-uvCheck = objShell.Run("uv --version", 0, True)
-If Err.Number = 0 Then
-    ' uv exists — use uv run instead
-    cmd = "uv run python " & pyFile
+If Not fso.FileExists(pyFile) Then
+    ' If not, fallback: resolve relative to VBS script location
+    scriptFolder = fso.GetParentFolderName(WScript.ScriptFullName)
+    pyFile = fso.BuildPath(scriptFolder, fso.GetFileName(pyFile))
 End If
+
+If Not fso.FileExists(pyFile) Then
+    MsgBox "Python file not found: " & pyFile & vbCrLf & _
+        "Please correct the path in the VBS script.", vbCritical, "File Not Found"
+    WScript.Quit 1
+End If
+
+projectDir = fso.GetParentFolderName(pyFile)
+logFile = fso.BuildPath(projectDir, "run.log")
+
+interactive = True
+If args.Count > 0 Then
+    Select Case LCase(args(0))
+        Case "/quiet", "/silent", "/background"
+            interactive = False
+    End Select
+End If
+
+' --- Check if uv exists ---
+On Error Resume Next
+uvCheck = objShell.Run("cmd.exe /c where uv >nul 2>&1", 0, True)
 On Error GoTo 0
 
-' Launch Windows Terminal starting in the project directory
-terminalCmd = "wt.exe -d """ & projectDir & """ powershell -NoExit -ExecutionPolicy Bypass -Command " & Chr(34) & cmd & Chr(34)
+If uvCheck = 0 Then
+    scriptCmd = "uv run python """ & pyFile & """"
+Else
+    scriptCmd = "pip install -r requirements.txt && python """ & pyFile & """"
+End If
 
-' Run
-objShell.Run terminalCmd, 1, True
+terminalCmd = "cmd.exe /c cd /d """ & projectDir & """ && " & scriptCmd
+
+If interactive Then
+    ' Interactive mode: change /c to /k so terminal stays open
+    terminalCmd = Replace(terminalCmd, "/c", "/k")
+    env("BING_INTERACTIVE") = "1"
+    objShell.Run terminalCmd, 1, True
+Else
+    ' Non-interactive: append log redirection
+    terminalCmd = terminalCmd & " > """ & logFile & """ 2>&1"
+    env("BING_INTERACTIVE") = "0"
+    objShell.Run terminalCmd, 0, False
+End If
