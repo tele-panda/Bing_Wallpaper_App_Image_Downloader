@@ -141,7 +141,7 @@ def fetch_other_theme_images():
     global theme_skipped
 
     for theme in THEMES:
-        if theme.lower() in ["bing", "space", "dog"]:
+        if theme.lower() in ["bing"]:
             continue  # skip Bing theme
         theme_dir = Path(theme)
         theme_dir.mkdir(exist_ok=True)
