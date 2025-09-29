@@ -6,10 +6,26 @@ import asyncio
 import threading
 
 # ---------------------------
+# Resolve Download Path
+# ---------------------------
+download_location = Path(".")  # default current dir
+download_location_file = Path(".download_location")
+if download_location_file.exists():
+    try:
+        path_content = download_location_file.read_text(encoding="utf-8").strip()
+        if path_content and path_content != ".":
+            download_location = Path(path_content).expanduser().resolve()
+            download_location.mkdir(parents=True, exist_ok=True)
+            print(f"Download path: {download_location}")
+    except Exception as e:
+        print(f"Warning: Could not read .download_location file, using current directory. ({e})")
+
+# ---------------------------
 # Configuration
 # ---------------------------
-BING_THEME_DIR = Path("Bing")
-TRACK_FILE = Path("downloaded images.txt")  # tracking file in script directory
+BING_THEME_DIR = "Bing"
+TRACK_FILE = download_location / "downloaded images.txt"  # tracking file in custom or current directory
+
 MARKETS = ["en-US", "ja-JP", "en-AU", "en-GB", "de-DE", "en-NZ", "en-CA",
            "en-IN", "fr-FR", "fr-CA", "it-IT", "es-ES", "pt-BR", "en-ROW"]
 
@@ -90,10 +106,9 @@ def show_spinner(state: bool):
 # Bing Image API
 # ---------------------------
 def fetch_bing_images():
-    BING_THEME_DIR.mkdir(exist_ok=True)
+    (download_location / BING_THEME_DIR).mkdir(exist_ok=True)
     seen, seen_ids = read_tracking()
-    global bing_downloaded
-    global bing_skipped
+    global bing_downloaded, bing_skipped
 
     for market in MARKETS:
         for idx in range(8):  # idx 0-7
@@ -115,7 +130,7 @@ def fetch_bing_images():
                     show_spinner(False)
                     for res in ["_UHD.jpg", "_1080x1920.jpg"]:
                         filename = f"{sanitize_filename(copyright_text)}{res}"
-                        filepath = BING_THEME_DIR / filename
+                        filepath = download_location / BING_THEME_DIR / filename
                         if filepath.exists():
                             bing_skipped += 1
                             # print(f"Skipping existing image: {filepath}")
@@ -137,13 +152,12 @@ def fetch_bing_images():
 # ---------------------------
 def fetch_other_theme_images():
     seen, seen_ids = read_tracking()
-    global theme_downloaded
-    global theme_skipped
+    global theme_downloaded, theme_skipped
 
     for theme in THEMES:
         if theme.lower() in ["bing"]:
             continue  # skip Bing theme
-        theme_dir = Path(theme)
+        theme_dir = download_location / theme
         theme_dir.mkdir(exist_ok=True)
         for bic in BIC_FILTERS:
             img_dir = theme_dir if bic else theme_dir / "AI Images"
@@ -167,22 +181,22 @@ def fetch_other_theme_images():
                     imagename = f"{sanitize_filename(title)} ({sanitize_filename(copyright_text)})"
                     if id_val in seen_ids:
                         theme_skipped += 1
-                        # print(f"Skipping existing image: {img_dir} / {imagename}")
+                        # print(f"Skipping existing image: {theme} / {imagename}")
                         show_spinner(True)
                         continue
                     show_spinner(False)
                     filepath = (img_dir / imagename).with_suffix(".jpg")
                     if filepath.exists():
                         theme_skipped += 1
-                        # print(f"Skipping existing image: {img_dir} / {imagename}")
+                        # print(f"Skipping existing image: {theme} / {imagename}")
                         show_spinner(True)
                         continue
                     show_spinner(False)
 
                     download_image(urlbase, filepath)
-                    print(f"Downloaded: {img_dir} / {imagename}")
-                    append_tracking(f"{img_dir} / {imagename}", id_val)
-                    seen.add(f"{img_dir} / {imagename}  |  {id_val}")
+                    print(f"Downloaded: {theme} / {imagename}")
+                    append_tracking(f"{theme} / {imagename}", id_val)
+                    seen.add(f"{theme} / {imagename}  |  {id_val}")
                     seen_ids.add(id_val)
                     theme_downloaded += 1
             except Exception as e:
