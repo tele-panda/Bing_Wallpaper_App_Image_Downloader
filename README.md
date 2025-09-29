@@ -62,7 +62,7 @@ pip install -r requirements.txt
 
 ## 🔍 How’s this Different?
 
-- ✅ Uses **title & copyright** instead of IDs.  
+- ✅ Uses **title** instead of IDs for file names.  
 - ✅ Retrieves **40 images** for Bing theme via Bing image API (unlike Bing Theme app api with just 8).  
 - ✅ Handles **deduplication smartly** across regions.  
 - ✅ Downloads **both landscape & portrait wallpapers**.  
