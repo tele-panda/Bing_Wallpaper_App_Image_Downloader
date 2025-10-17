@@ -82,7 +82,10 @@ _task = None
 
 
 def sanitize_filename(name):
-    return re.sub(r'[\\/*?:"<>|]', "_", name)
+    # replace illegal chars
+    name = re.sub(r'[\\/*?:"<>|]', "_", name)
+    # strip trailing spaces and dots (Windows forbids these)
+    return name.rstrip(" .")
 
 
 def read_tracking():
@@ -226,7 +229,7 @@ def fetch_other_theme_images():
                         show_spinner(True)
                         continue
                     show_spinner(False)
-                    filepath = (img_dir / imagename).with_suffix(".jpg")
+                    filepath = img_dir / f"{imagename}.jpg"
                     if filepath.exists():
                         theme_skipped += 1
                         # print(f"Skipping existing image: {theme} / {imagename}")
